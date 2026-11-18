@@ -38,6 +38,20 @@ function mapPanel(stories, w, h) {
     landPaths(p) + pinLayer(placed, radius, (pin) => CATEGORIES[pin.cat].colour) + '</svg>';
 }
 
+// Rough continent boxes, checked in order; enough to count which continents the day's pins touch.
+function continentOf(lon, lat) {
+  if (lon == null || lat == null) return null;
+  if (lat < -10 && lon > 110) return 'Oceania';
+  if (lon < -30) return lat > 12 ? 'North America' : 'South America';
+  if (lon >= -25 && lon < 45 && lat >= 35) return 'Europe';
+  if (lon >= -20 && lon < 52 && lat < 35 && !(lon > 34 && lat > 12)) return 'Africa';
+  return 'Asia';
+}
+function continents(day) {
+  const all = [...day.leads, ...day.cards, ...day.briefs];
+  return new Set(all.map((s) => continentOf(s.lon, s.lat)).filter(Boolean)).size;
+}
+
 export function renderPage(day) {
   const leads = day.leads.map((s, i) => ({ ...s, n: i + 1 }));
   const cards = day.cards.map((s, i) => ({ ...s, n: i + 1 + leads.length }));
@@ -78,7 +92,7 @@ export function renderPage(day) {
   .kicker { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700; letter-spacing: 2.4px; color: #e9c46a; text-transform: uppercase; }
   .date { font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-size: 54px; line-height: 58px; margin-top: 1px; letter-spacing: -.5px; }
   .strap { font-family: Georgia, serif; font-style: italic; font-size: 13.5px; color: #d7deeb; line-height: 17px; }
-  .figs { position: absolute; left: 0; top: 116px; width: 1024px; height: 27px; background: #b5121b; color: #fff; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 9px; white-space: nowrap; }
+  .figs { position: absolute; left: 0; top: 116px; width: 1024px; overflow: hidden; height: 27px; background: #b5121b; color: #fff; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 9px; white-space: nowrap; }
   .figs b { font-weight: 800; }
   .figs .sep { opacity: .45; }
   .leads { position: absolute; left: 16px; top: 151px; width: 992px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -106,9 +120,9 @@ export function renderPage(day) {
   .map svg { display: block; margin-top: 5px; border: 1px solid #d6dde3; }
   .legend { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 9.6px; color: #374151; margin-top: 5px; }
   .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
-  .list { flex: 1; background: #fff; border: 1px solid #e0d9c8; padding: 7px 11px 0; }
+  .list { flex: 1; min-width: 0; background: #fff; border: 1px solid #e0d9c8; padding: 7px 11px 0; }
   .list .hd { border-bottom: 2px solid #b5121b; padding-bottom: 4px; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; margin-top: 3px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 14px; margin-top: 3px; }
   .cols ul { list-style: none; }
   .cols li { display: flex; align-items: center; gap: 6px; font-size: 11.2px; line-height: 13px; height: 17.4px; border-bottom: 1px dotted #d9d3c4; white-space: nowrap; overflow: hidden; }
   .cols li b { color: #0f1d3a; }
@@ -117,7 +131,7 @@ export function renderPage(day) {
 </style></head>
 <body>
   <header class="mast">
-    <div class="kicker"><span>The world's news in one picture</span><span>${total} stories · 6 continents · one day</span></div>
+    <div class="kicker"><span>The world's news in one picture</span><span>${total} stories · ${continents(day)} continents · one day</span></div>
     <div class="date">${esc(day.dateLine)}</div>
     <div class="strap">${rich(day.strap)}</div>
   </header>

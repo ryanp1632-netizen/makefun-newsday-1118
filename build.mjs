@@ -54,8 +54,10 @@ const probe = html.replace('</body>', `<script>
     const last = box.lastElementChild;
     if (outOf(last, box)) bad.push((box.className) + ' ' + (i + 1) + ': ' + box.querySelector('h2, h3').textContent);
   });
-  document.querySelectorAll('.cols li span').forEach((s) => { if (s.scrollWidth > s.parentElement.clientWidth - 18) bad.push('list: ' + s.textContent); });
+  document.querySelectorAll('.cols li span').forEach((s) => { if (s.getBoundingClientRect().right > s.parentElement.getBoundingClientRect().right - 1) bad.push('list: ' + s.textContent); });
   document.querySelectorAll('.list, .map').forEach((box) => { [...box.querySelectorAll('li, .legend')].forEach((el) => { if (outOf(el, box)) bad.push('bottom: ' + el.textContent); }); });
+  const figs = document.querySelector('.figs');
+  if (figs.scrollWidth > figs.clientWidth) bad.push('figures strip is too wide');
   const foot = document.querySelector('.foot');
   if (foot.getBoundingClientRect().bottom > 1024 || foot.scrollWidth > foot.clientWidth) bad.push('footer');
   document.body.setAttribute('data-overflow', JSON.stringify(bad));
