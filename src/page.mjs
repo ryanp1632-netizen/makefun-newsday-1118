@@ -39,6 +39,20 @@ function mapPanel(stories, w, h) {
 }
 
 // Rough continent boxes, checked in order; enough to count which continents the day's pins touch.
+const REGIONS = [
+  ['Europe', '#3b5b8c'], ['Middle East', '#a4343a'], ['Asia', '#6d4c9a'], ['Africa', '#c07a1c'],
+  ['Americas', '#2f7d4f'], ['Oceania', '#2b8a9a'], ['Space', '#4b5563'],
+];
+function regionOf(s) {
+  if (s.lon == null || s.lat == null) return 'Space';
+  if (s.lon >= 34 && s.lon < 63 && s.lat >= 12 && s.lat < 42) return 'Middle East';
+  const c = continentOf(s.lon, s.lat);
+  return c === 'North America' || c === 'South America' ? 'Americas' : c;
+}
+function regionBar(all) {
+  const counts = REGIONS.map(([name, colour]) => ({ name, colour, n: all.filter((s) => regionOf(s) === name).length })).filter((r) => r.n);
+  return counts.map((r) => `<span style="flex:${r.n + 3};background:${r.colour}">${esc(r.name)} <b>${r.n}</b></span>`).join('');
+}
 function continentOf(lon, lat) {
   if (lon == null || lat == null) return null;
   if (lat < -10 && lon > 110) return 'Oceania';
@@ -64,7 +78,7 @@ export function renderPage(day) {
   const leadHtml = leads.map((s) => `
     <article class="lead">
       <div class="scene">${scene(s.scene)}<span class="place">${esc(s.place)}</span></div>
-      <div class="tag" style="color:${colourOf(s)}">${numberBadge(s.n, colourOf(s), 19)}${esc(s.region)}</div>
+      <div class="tag" style="color:${colourOf(s)}">${numberBadge(s.n, colourOf(s), 19)}${esc(s.region)}<em>${esc(s.src ?? '')}</em></div>
       <h2>${rich(s.head)}</h2>
       <p>${rich(s.sum)}</p>
     </article>`).join('');
@@ -72,7 +86,7 @@ export function renderPage(day) {
   const cardHtml = cards.map((s) => `
     <article class="card">
       <div class="band">${banner(s.banner)}<span class="cap">${esc(s.caption)}</span></div>
-      <div class="tag" style="color:${colourOf(s)}">${numberBadge(s.n, colourOf(s), 15)}${esc(s.region)}</div>
+      <div class="tag" style="color:${colourOf(s)}">${numberBadge(s.n, colourOf(s), 15)}${esc(s.region)}<em>${esc(s.src ?? '')}</em></div>
       <h3>${rich(s.head)}</h3>
       <p>${rich(s.sum)}</p>
     </article>`).join('');
@@ -95,17 +109,20 @@ export function renderPage(day) {
   .figs { position: absolute; left: 0; top: 116px; width: 1024px; overflow: hidden; height: 27px; background: #b5121b; color: #fff; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 9px; white-space: nowrap; }
   .figs b { font-weight: 800; }
   .figs .sep { opacity: .45; }
-  .leads { position: absolute; left: 16px; top: 151px; width: 992px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .lead { background: #fff; border: 1px solid #e0d9c8; height: 236px; overflow: hidden; }
-  .scene { position: relative; height: 124px; overflow: hidden; }
+  .regions { position: absolute; left: 16px; top: 147px; width: 992px; height: 16px; display: flex; gap: 2px; }
+  .regions span { color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-align: center; line-height: 16px; white-space: nowrap; overflow: hidden; }
+  .leads { position: absolute; left: 16px; top: 168px; width: 992px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .lead { background: #fff; border: 1px solid #e0d9c8; height: 226px; overflow: hidden; }
+  .scene { position: relative; height: 116px; overflow: hidden; }
   .scene svg { display: block; }
   .place { position: absolute; left: 0; top: 0; background: #0f1d3a; color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; padding: 3px 8px; text-transform: uppercase; }
-  .tag { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .tag em { margin-left: auto; font-style: normal; font-weight: 600; color: #6b7280; letter-spacing: .4px; }
+  .tag { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
   .lead .tag { margin: 7px 11px 0; }
   .num { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-weight: 800; letter-spacing: 0; flex: none; font-family: "Segoe UI", Arial, sans-serif; }
   h2 { font-family: Georgia, serif; font-size: 19.5px; line-height: 22px; font-weight: 700; margin: 4px 11px 0; color: #111827; }
   .lead p { font-size: 12.3px; line-height: 15.5px; margin: 4px 11px 0; color: #334155; }
-  .cards { position: absolute; left: 16px; top: 397px; width: 992px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px 10px; }
+  .cards { position: absolute; left: 16px; top: 401px; width: 992px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px 10px; }
   .card { background: #fff; border: 1px solid #e0d9c8; height: 150px; overflow: hidden; }
   .band { position: relative; height: 66px; }
   .band svg { display: block; width: 100%; height: 52px; }
@@ -113,7 +130,7 @@ export function renderPage(day) {
   .card .tag { margin: 5px 8px 0; font-size: 9px; gap: 5px; letter-spacing: .7px; }
   h3 { font-family: Georgia, serif; font-size: 14px; line-height: 16px; font-weight: 700; margin: 3px 8px 0; color: #111827; }
   .card p { font-size: 10.6px; line-height: 13px; margin: 3px 8px 0; color: #3b4658; }
-  .bottom { position: absolute; left: 16px; top: 711px; width: 992px; height: 285px; display: flex; gap: 12px; }
+  .bottom { position: absolute; left: 16px; top: 715px; width: 992px; height: 242px; display: flex; gap: 12px; }
   .map { width: 352px; background: #fff; border: 1px solid #e0d9c8; padding: 7px 8px 0; }
   .map .hd, .list .hd { font-size: 11px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: #0f1d3a; display: flex; justify-content: space-between; align-items: baseline; }
   .map .hd small { font-weight: 600; letter-spacing: 0; text-transform: none; color: #6b7280; font-size: 10px; }
@@ -124,9 +141,12 @@ export function renderPage(day) {
   .list .hd { border-bottom: 2px solid #b5121b; padding-bottom: 4px; }
   .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 14px; margin-top: 3px; }
   .cols ul { list-style: none; }
-  .cols li { display: flex; align-items: center; gap: 6px; font-size: 11.2px; line-height: 13px; height: 17.4px; border-bottom: 1px dotted #d9d3c4; white-space: nowrap; overflow: hidden; }
+  .cols li { display: flex; align-items: center; gap: 6px; font-size: 11px; line-height: 13px; height: 14.9px; border-bottom: 1px dotted #d9d3c4; white-space: nowrap; overflow: hidden; }
   .cols li b { color: #0f1d3a; }
-  .foot { position: absolute; left: 16px; right: 16px; top: 1001px; display: flex; justify-content: space-between; font-size: 10px; color: #4b5563; }
+  .check { position: absolute; left: 16px; top: 961px; width: 992px; height: 38px; border: 1.5px solid #b5121b; background: #fff; padding: 3px 9px; font-size: 10.2px; line-height: 14.5px; color: #374151; overflow: hidden; }
+  .check b { color: #111827; }
+  .check b.hd { color: #b5121b; letter-spacing: 1.4px; margin-right: 6px; }
+  .foot { position: absolute; left: 16px; right: 16px; top: 1006px; display: flex; justify-content: space-between; font-size: 10px; color: #4b5563; }
   .foot i { color: #111827; }
 </style></head>
 <body>
@@ -136,12 +156,13 @@ export function renderPage(day) {
     <div class="strap">${rich(day.strap)}</div>
   </header>
   <div class="figs">${figures}</div>
+  <div class="regions">${regionBar(all)}</div>
   <section class="leads">${leadHtml}</section>
   <section class="cards">${cardHtml}</section>
   <section class="bottom">
     <div class="map">
       <div class="hd"><span>Where it happened</span><small>Pins carry the story numbers</small></div>
-      ${mapPanel(all, 334, 204)}
+      ${mapPanel(all, 334, 180)}
       <div class="legend">${legend}</div>
     </div>
     <div class="list">
@@ -149,6 +170,7 @@ export function renderPage(day) {
       <div class="cols"><ul>${col(briefs.slice(0, half))}</ul><ul>${col(briefs.slice(half))}</ul></div>
     </div>
   </section>
+  <div class="check"><b class="hd">DATE CHECK</b>${rich(day.dateCheck)}</div>
   <footer class="foot"><i>${rich(day.footnote)}</i><span>${esc(day.sources)}</span></footer>
 </body></html>`;
 }

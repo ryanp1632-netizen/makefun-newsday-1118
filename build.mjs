@@ -58,6 +58,11 @@ const probe = html.replace('</body>', `<script>
   document.querySelectorAll('.list, .map').forEach((box) => { [...box.querySelectorAll('li, .legend')].forEach((el) => { if (outOf(el, box)) bad.push('bottom: ' + el.textContent); }); });
   const figs = document.querySelector('.figs');
   if (figs.scrollWidth > figs.clientWidth) bad.push('figures strip is too wide');
+  const chk = document.querySelector('.check');
+  if (chk.scrollHeight > chk.clientHeight + 1) bad.push('date check');
+  const regs = document.querySelector('.regions');
+  regs.querySelectorAll('span').forEach((sp) => { if (sp.scrollWidth > sp.clientWidth) bad.push('region: ' + sp.textContent); });
+  document.querySelectorAll('.tag').forEach((t) => { if (t.scrollWidth > t.clientWidth) bad.push('tag: ' + t.textContent); });
   const foot = document.querySelector('.foot');
   if (foot.getBoundingClientRect().bottom > 1024 || foot.scrollWidth > foot.clientWidth) bad.push('footer');
   document.body.setAttribute('data-overflow', JSON.stringify(bad));
